@@ -19,8 +19,11 @@ else
 // Configurar database
 builder.Services.AddDatabase(builder.Configuration);
 
+// Configurar resiliência (circuit breakers + health cache)
+builder.Services.AddResilience();
+
+// TODO: Add HTTP clients configuration
 // TODO: Add payment processors
-// TODO: Add circuit breakers
 // TODO: Add channel pipeline
 
 var app = builder.Build();
@@ -38,6 +41,31 @@ app.MapGet("/stats", async (IDatabaseService db) =>
 {
     var stats = await db.GetStatsAsync();
     return Results.Ok(stats);
+});
+
+// Endpoint de métricas dos circuit breakers
+app.MapCircuitBreakerMetrics();
+
+// Endpoint de teste dos circuit breakers
+app.MapGet("/test/circuit-breaker/{processor}", (string processor, ICircuitBreakerFactory factory) =>
+{
+    try
+    {
+        var breaker = factory.GetCircuitBreaker(processor);
+        var canExecute = breaker.CanExecute();
+        var metrics = breaker.GetMetrics();
+
+        return Results.Ok(new
+        {
+            Processor = processor,
+            CanExecute = canExecute,
+            Metrics = metrics
+        });
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(ex.Message);
+    }
 });
 
 // TODO: Implementar endpoints obrigatorios
