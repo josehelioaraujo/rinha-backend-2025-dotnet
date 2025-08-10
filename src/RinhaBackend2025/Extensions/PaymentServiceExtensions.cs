@@ -13,17 +13,18 @@ public static class PaymentServiceExtensions
 
     public static WebApplication MapPaymentEndpoints(this WebApplication app)
     {
-        // POST /payments - Endpoint obrigatório
+        // POST /payments - Endpoint obrigatório COM PIPELINE
         app.MapPost("/payments", async (
             PaymentRequest request,
-            IPaymentService paymentService,
+            IPaymentQueue queue,
             CancellationToken cancellationToken) =>
         {
             try
             {
-                var result = await paymentService.ProcessPaymentAsync(request, cancellationToken);
+                // Enfileirar para processamento assíncrono (fire-and-forget)
+                var enqueued = await queue.EnqueueAsync(request, cancellationToken);
                 
-                // SEMPRE retorna 2XX conforme especificação
+                // SEMPRE retorna 2XX imediatamente (máxima performance)
                 return Results.Ok();
             }
             catch
@@ -57,7 +58,7 @@ public static class PaymentServiceExtensions
             return Results.Ok(new { CorrelationId = correlationId, Exists = exists });
         });
 
-        app.MapPost("/debug/test-payment", async (IPaymentService paymentService) =>
+        app.MapPost("/debug/test-payment-sync", async (IPaymentService paymentService) =>
         {
             var testRequest = new PaymentRequest
             {
@@ -66,6 +67,24 @@ public static class PaymentServiceExtensions
             };
 
             var result = await paymentService.ProcessPaymentAsync(testRequest);
+            
+            return Results.Ok(new
+            {
+                TestRequest = testRequest,
+                Result = result,
+                Timestamp = DateTime.UtcNow
+            });
+        });
+
+        app.MapPost("/debug/test-payment-async", async (IPaymentQueue queue) =>
+        {
+            var testRequest = new PaymentRequest
+            {
+                CorrelationId = Guid.NewGuid(),
+                Amount = 199.99m
+            };
+
+            var result = await queue.EnqueueAndWaitAsync(testRequest);
             
             return Results.Ok(new
             {

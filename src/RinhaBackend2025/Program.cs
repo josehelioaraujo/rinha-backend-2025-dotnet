@@ -20,19 +20,16 @@ else
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddResilience();
 builder.Services.AddPaymentProcessorClients(builder.Configuration);
-builder.Services.AddPaymentService(); // ← NOVO: Service principal
-
-// TODO: Add channel pipeline para background processing
+builder.Services.AddPaymentService();
+builder.Services.AddPaymentPipeline(builder.Configuration); // ← NOVO: Pipeline assíncrono
 
 var app = builder.Build();
 
 // Inicializar database na startup
 await app.Services.InitializeDatabaseAsync();
 
-// TODO: Add middleware pipeline
-
 // Health check endpoint
-app.MapGet("/", () => "Rinha Backend 2025 - .NET Ultra Performance");
+app.MapGet("/", () => "Rinha Backend 2025 - .NET Ultra Performance + Async Pipeline");
 
 // Endpoints de teste e métricas
 app.MapGet("/stats", async (IDatabaseService db) =>
@@ -43,9 +40,10 @@ app.MapGet("/stats", async (IDatabaseService db) =>
 
 app.MapCircuitBreakerMetrics();
 app.MapHttpClientTests();
+app.MapPipelineEndpoints(); // ← NOVO: Métricas do pipeline
 
 // ★ ENDPOINTS OBRIGATÓRIOS DA COMPETIÇÃO ★
-app.MapPaymentEndpoints();
+app.MapPaymentEndpoints(); // Agora usa pipeline assíncrono
 
 // Endpoints de debug (apenas em desenvolvimento)
 if (app.Environment.IsDevelopment())
