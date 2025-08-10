@@ -13,16 +13,23 @@ public static class PaymentServiceExtensions
 
     public static WebApplication MapPaymentEndpoints(this WebApplication app)
     {
-        // POST /payments - Endpoint obrigatório COM PIPELINE
+        // POST /payments - Endpoint obrigatório COM PIPELINE (ultra-rápido)
         app.MapPost("/payments", async (
             PaymentRequest request,
             IPaymentQueue queue,
+            ICacheService cache,
             CancellationToken cancellationToken) =>
         {
             try
             {
                 // Enfileirar para processamento assíncrono (fire-and-forget)
                 var enqueued = await queue.EnqueueAsync(request, cancellationToken);
+                
+                // Invalidar cache quando há novo pagamento
+                if (enqueued)
+                {
+                    cache.InvalidateSummaryCache();
+                }
                 
                 // SEMPRE retorna 2XX imediatamente (máxima performance)
                 return Results.Ok();
@@ -34,15 +41,23 @@ public static class PaymentServiceExtensions
             }
         });
 
-        // GET /payments-summary - Endpoint obrigatório  
+        // GET /payments-summary - Endpoint obrigatório COM CACHE
         app.MapGet("/payments-summary", async (
             DateTime? from,
             DateTime? to,
-            IPaymentService paymentService,
+            ICacheService cache,
             CancellationToken cancellationToken) =>
         {
-            var summary = await paymentService.GetPaymentsSummaryAsync(from, to, cancellationToken);
-            return Results.Ok(summary);
+            // Tentar cache primeiro, fallback para database
+            var summary = await cache.GetSummaryAsync(from, to);
+            
+            if (summary != null)
+            {
+                return Results.Ok(summary);
+            }
+
+            // Fallback: retorna summary vazio se cache falhar
+            return Results.Ok(PaymentsSummary.Empty);
         });
 
         return app;

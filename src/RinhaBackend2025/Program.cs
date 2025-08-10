@@ -4,51 +4,66 @@ using RinhaBackend2025.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar logging
+// Logging simples
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-if (builder.Environment.IsDevelopment())
-{
-    builder.Logging.SetMinimumLevel(LogLevel.Debug);
-}
-else
-{
-    builder.Logging.SetMinimumLevel(LogLevel.Information);
-}
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-// Configurar services em ordem de dependência
+// Services básicos
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddResilience();
 builder.Services.AddPaymentProcessorClients(builder.Configuration);
 builder.Services.AddPaymentService();
-builder.Services.AddPaymentPipeline(builder.Configuration); // ← NOVO: Pipeline assíncrono
+builder.Services.AddPaymentPipeline(builder.Configuration);
 
 var app = builder.Build();
 
-// Inicializar database na startup
+// Inicializar database
 await app.Services.InitializeDatabaseAsync();
 
-// Health check endpoint
-app.MapGet("/", () => "Rinha Backend 2025 - .NET Ultra Performance + Async Pipeline");
+// Endpoints básicos
+app.MapGet("/", () => "Rinha Backend 2025 - Ultra Performance");
 
-// Endpoints de teste e métricas
 app.MapGet("/stats", async (IDatabaseService db) =>
 {
     var stats = await db.GetStatsAsync();
     return Results.Ok(stats);
 });
 
-app.MapCircuitBreakerMetrics();
-app.MapHttpClientTests();
-app.MapPipelineEndpoints(); // ← NOVO: Métricas do pipeline
-
-// ★ ENDPOINTS OBRIGATÓRIOS DA COMPETIÇÃO ★
-app.MapPaymentEndpoints(); // Agora usa pipeline assíncrono
-
-// Endpoints de debug (apenas em desenvolvimento)
-if (app.Environment.IsDevelopment())
+app.MapGet("/metrics/queue", (IPaymentQueue queue) =>
 {
-    app.MapPaymentDebugEndpoints();
-}
+    var metrics = queue.GetMetrics();
+    return Results.Ok(metrics);
+});
+
+app.MapGet("/metrics/circuit-breakers", (ICircuitBreakerFactory factory) =>
+{
+    var metrics = new
+    {
+        Default = factory.GetCircuitBreaker("default").GetMetrics(),
+        Fallback = factory.GetCircuitBreaker("fallback").GetMetrics()
+    };
+    return Results.Ok(metrics);
+});
+
+// ENDPOINTS OBRIGATÓRIOS
+app.MapPost("/payments", async (
+    PaymentRequest request,
+    IPaymentQueue queue,
+    CancellationToken cancellationToken) =>
+{
+    await queue.EnqueueAsync(request, cancellationToken);
+    return Results.Ok();
+});
+
+app.MapGet("/payments-summary", async (
+    DateTime? from,
+    DateTime? to,
+    IPaymentService paymentService,
+    CancellationToken cancellationToken) =>
+{
+    var summary = await paymentService.GetPaymentsSummaryAsync(from, to, cancellationToken);
+    return Results.Ok(summary);
+});
 
 app.Run();
