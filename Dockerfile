@@ -9,7 +9,9 @@ RUN dotnet restore ./RinhaBackend2025/RinhaBackend2025.csproj
 # Copy source and build
 COPY src/RinhaBackend2025/ ./RinhaBackend2025/
 WORKDIR /src/RinhaBackend2025
-RUN dotnet publish -c Release -o /app/publish --no-restore
+
+# Build with restore (removemos --no-restore)
+RUN dotnet publish -c Release -o /app/publish
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
@@ -26,8 +28,8 @@ ENV ASPNETCORE_URLS=http://+:8080
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data && \
-    adduser -D -s /bin/sh appuser && \
-    chown -R appuser:appuser /app
+   adduser -D -s /bin/sh appuser && \
+   chown -R appuser:appuser /app
 
 # Copy application
 COPY --from=build /app/publish .
