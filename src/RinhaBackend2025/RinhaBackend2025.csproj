@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- Performance Optimizations -->
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishTrimmed>false</PublishTrimmed>
+    <TieredPGO>true</TieredPGO>
+    <TieredCompilation>true</TieredCompilation>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    
+    <!-- AOT Preparation (can be enabled later) -->
+    <PublishAot Condition="'$(Configuration)' == 'Release'">false</PublishAot>
+    
+    <!-- Docker -->
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <ContainerImageName>rinha-backend-2025</ContainerImageName>
+    <ContainerImageTag>latest</ContainerImageTag>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Core packages -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0" />
+    <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.0" />
+    
+    <!-- HTTP Client optimizations -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    
+    <!-- JSON optimization -->
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
+  </ItemGroup>
+
+</Project>
