@@ -22,8 +22,10 @@ builder.Services.AddDatabase(builder.Configuration);
 // Configurar resiliência (circuit breakers + health cache)
 builder.Services.AddResilience();
 
-// TODO: Add HTTP clients configuration
-// TODO: Add payment processors
+// Configurar HTTP clients otimizados
+builder.Services.AddPaymentProcessorClients(builder.Configuration);
+
+// TODO: Add payment processors service
 // TODO: Add channel pipeline
 
 var app = builder.Build();
@@ -67,6 +69,9 @@ app.MapGet("/test/circuit-breaker/{processor}", (string processor, ICircuitBreak
         return Results.BadRequest(ex.Message);
     }
 });
+
+// Endpoints de teste dos HTTP clients
+app.MapHttpClientTests();
 
 // TODO: Implementar endpoints obrigatorios
 // app.MapPost("/payments", async (PaymentRequest request, IDatabaseService db) => { });

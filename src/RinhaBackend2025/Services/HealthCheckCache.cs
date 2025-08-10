@@ -39,7 +39,9 @@ public sealed class HealthCheckCache : IHealthCheckCache
         // Cache expirado ou não existe, fazer nova requisição
         try
         {
-            var client = _httpClientFactory.CreateClient(processorName);
+            // Usar client específico para health checks
+            var clientName = $"health-{processorName}";
+            var client = _httpClientFactory.CreateClient(clientName);
             
             using var response = await client.GetAsync(HEALTH_ENDPOINT);
             
