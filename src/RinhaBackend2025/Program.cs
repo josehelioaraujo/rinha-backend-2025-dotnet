@@ -16,17 +16,13 @@ else
     builder.Logging.SetMinimumLevel(LogLevel.Information);
 }
 
-// Configurar database
+// Configurar services em ordem de dependência
 builder.Services.AddDatabase(builder.Configuration);
-
-// Configurar resiliência (circuit breakers + health cache)
 builder.Services.AddResilience();
-
-// Configurar HTTP clients otimizados
 builder.Services.AddPaymentProcessorClients(builder.Configuration);
+builder.Services.AddPaymentService(); // ← NOVO: Service principal
 
-// TODO: Add payment processors service
-// TODO: Add channel pipeline
+// TODO: Add channel pipeline para background processing
 
 var app = builder.Build();
 
@@ -38,43 +34,23 @@ await app.Services.InitializeDatabaseAsync();
 // Health check endpoint
 app.MapGet("/", () => "Rinha Backend 2025 - .NET Ultra Performance");
 
-// Endpoint de teste do database
+// Endpoints de teste e métricas
 app.MapGet("/stats", async (IDatabaseService db) =>
 {
     var stats = await db.GetStatsAsync();
     return Results.Ok(stats);
 });
 
-// Endpoint de métricas dos circuit breakers
 app.MapCircuitBreakerMetrics();
-
-// Endpoint de teste dos circuit breakers
-app.MapGet("/test/circuit-breaker/{processor}", (string processor, ICircuitBreakerFactory factory) =>
-{
-    try
-    {
-        var breaker = factory.GetCircuitBreaker(processor);
-        var canExecute = breaker.CanExecute();
-        var metrics = breaker.GetMetrics();
-
-        return Results.Ok(new
-        {
-            Processor = processor,
-            CanExecute = canExecute,
-            Metrics = metrics
-        });
-    }
-    catch (ArgumentException ex)
-    {
-        return Results.BadRequest(ex.Message);
-    }
-});
-
-// Endpoints de teste dos HTTP clients
 app.MapHttpClientTests();
 
-// TODO: Implementar endpoints obrigatorios
-// app.MapPost("/payments", async (PaymentRequest request, IDatabaseService db) => { });
-// app.MapGet("/payments-summary", async (DateTime? from, DateTime? to, IDatabaseService db) => { });
+// ★ ENDPOINTS OBRIGATÓRIOS DA COMPETIÇÃO ★
+app.MapPaymentEndpoints();
+
+// Endpoints de debug (apenas em desenvolvimento)
+if (app.Environment.IsDevelopment())
+{
+    app.MapPaymentDebugEndpoints();
+}
 
 app.Run();
