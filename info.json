@@ -1,0 +1,23 @@
+{
+  "name": "Hélio Andrade",
+  "social": [
+    "https://github.com/josehelioaraujo",
+    "https://www.linkedin.com/in/helio-andrade-b8b5517"
+  ],
+  "source-code-repo": "https://github.com/josehelioaraujo/rinha-backend-2025-dotnet",
+  "langs": ["csharp"],
+  "storages": ["sqlite"],
+  "messaging": ["channels"],
+  "load-balancers": ["nginx"],
+  "other-technologies": [
+    "dotnet-8",
+    "aspnet-core",
+    "minimal-apis",
+    "bounded-channels",
+    "circuit-breakers",
+    "kestrel",
+    "memory-cache",
+    "wal-mode",
+    "docker"
+  ]
+}
