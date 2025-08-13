@@ -2,15 +2,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /src
 
-# Copy project files for better caching
-COPY src/RinhaBackend2025/*.csproj ./RinhaBackend2025/
-RUN dotnet restore ./RinhaBackend2025/RinhaBackend2025.csproj
+# Copy csproj and restore dependencies
+COPY ["src/RinhaBackend2025/RinhaBackend2025.csproj", "src/RinhaBackend2025/"]
+RUN dotnet restore "src/RinhaBackend2025/RinhaBackend2025.csproj"
 
-# Copy source and build
+# Copy everything else and build
 COPY src/RinhaBackend2025/ ./RinhaBackend2025/
 WORKDIR /src/RinhaBackend2025
-
-# Build with restore (removemos --no-restore)
 RUN dotnet publish -c Release -o /app/publish
 
 # Runtime stage
@@ -26,12 +24,12 @@ ENV DOTNET_gcServer=1
 ENV DOTNET_GCHeapHardLimit=150000000
 ENV ASPNETCORE_URLS=http://+:8080
 
-# Create data directory for SQLite
+# Create app user and data directory
 RUN mkdir -p /app/data && \
-   adduser -D -s /bin/sh appuser && \
-   chown -R appuser:appuser /app
+    adduser -D -s /bin/sh appuser && \
+    chown -R appuser:appuser /app
 
-# Copy application
+# Copy published app
 COPY --from=build /app/publish .
 
 USER appuser

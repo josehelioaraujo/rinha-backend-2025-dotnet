@@ -30,7 +30,7 @@ public sealed class UltraFastCircuitBreaker : ICircuitBreaker
         
         if (_state == CircuitState.Open)
         {
-            if (new DateTime(_lastFailureTime) - DateTime.UtcNow > _timeout)
+            if (DateTime.UtcNow - _lastFailureTime > _timeout)
             {
                 _state = CircuitState.HalfOpen;
                 return true;

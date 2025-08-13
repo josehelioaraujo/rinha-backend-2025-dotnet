@@ -1,0 +1,10 @@
+namespace RinhaBackend2025.Models;
+
+// Definição única e limpa do PaymentResponse como record
+public record PaymentResponse(
+    string CorrelationId,
+    decimal Amount,
+    string Status,
+    DateTime ProcessedAt,
+    string ProcessorId
+);

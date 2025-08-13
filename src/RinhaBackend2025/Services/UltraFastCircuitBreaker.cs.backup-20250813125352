@@ -12,7 +12,7 @@ public interface ICircuitBreaker
 public sealed class UltraFastCircuitBreaker : ICircuitBreaker
 {
     private volatile int _failureCount;
-    private long _lastFailureTime;
+    private volatile DateTime _lastFailureTime;
     private volatile CircuitState _state = CircuitState.Closed;
     private readonly int _failureThreshold;
     private readonly TimeSpan _timeout;
@@ -30,7 +30,7 @@ public sealed class UltraFastCircuitBreaker : ICircuitBreaker
         
         if (_state == CircuitState.Open)
         {
-            if (new DateTime(_lastFailureTime) - DateTime.UtcNow > _timeout)
+            if (DateTime.UtcNow - _lastFailureTime > _timeout)
             {
                 _state = CircuitState.HalfOpen;
                 return true;
@@ -52,7 +52,7 @@ public sealed class UltraFastCircuitBreaker : ICircuitBreaker
     public void RecordFailure()
     {
         _failureCount++;
-        _lastFailureTime = DateTime.UtcNow.Ticks;
+        _lastFailureTime = DateTime.UtcNow;
         
         if (_failureCount >= _failureThreshold)
         {

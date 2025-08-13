@@ -19,12 +19,15 @@ services:
       resources:
         limits:
           cpus: "0.1"
-          memory: "15MB"
+          memory: "8MB"
+        reservations:
+          cpus: "0.05"
+          memory: "4MB"
     restart: unless-stopped
 
   # API Instance 1
   api1: &api
-    build: .
+    image: ghcr.io/josehelioaraujo/rinha-backend-2025-dotnet:latest
     hostname: api1
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
@@ -46,10 +49,13 @@ services:
       resources:
         limits:
           cpus: "0.7"
-          memory: "167MB"
+          memory: "171MB"
+        reservations:
+          cpus: "0.35"
+          memory: "128MB"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3

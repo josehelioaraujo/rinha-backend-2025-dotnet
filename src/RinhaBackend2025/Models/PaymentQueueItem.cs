@@ -1,48 +1,52 @@
-using RinhaBackend2025.Services;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace RinhaBackend2025.Models;
-
-/// <summary>
-/// Item da queue de processamento assíncrono
-/// Otimizado para bounded channels
-/// </summary>
-public sealed record PaymentQueueItem
+namespace RinhaBackend2025.Models
 {
-    public required PaymentRequest PaymentRequest { get; init; }
-    public required DateTime QueuedAt { get; init; }
-    public required CancellationToken CancellationToken { get; init; }
-    public TaskCompletionSource<PaymentResult>? CompletionSource { get; init; }
-
     /// <summary>
-    /// Cria item para processamento fire-and-forget
+    /// Representa um item na fila de pagamentos
     /// </summary>
-    public static PaymentQueueItem CreateFireAndForget(PaymentRequest request, CancellationToken cancellationToken = default)
+    public class PaymentQueueItem
     {
-        return new PaymentQueueItem
-        {
-            PaymentRequest = request,
-            QueuedAt = DateTime.UtcNow,
-            CancellationToken = cancellationToken,
-            CompletionSource = null // Fire-and-forget
-        };
-    }
+        /// <summary>
+        /// ID de correlação do pagamento
+        /// </summary>
+        public required string CorrelationId { get; set; }
 
-    /// <summary>
-    /// Cria item para processamento com await
-    /// </summary>
-    public static PaymentQueueItem CreateWithCompletion(PaymentRequest request, CancellationToken cancellationToken = default)
-    {
-        return new PaymentQueueItem
-        {
-            PaymentRequest = request,
-            QueuedAt = DateTime.UtcNow,
-            CancellationToken = cancellationToken,
-            CompletionSource = new TaskCompletionSource<PaymentResult>()
-        };
-    }
+        /// <summary>
+        /// Valor do pagamento
+        /// </summary>
+        public decimal Amount { get; set; }
 
-    /// <summary>
-    /// Tempo na queue
-    /// </summary>
-    public TimeSpan QueueTime => DateTime.UtcNow - QueuedAt;
+        /// <summary>
+        /// Data e hora de criação do item na fila
+        /// </summary>
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// Data e hora da requisição
+        /// </summary>
+        public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// Número de tentativas de processamento
+        /// </summary>
+        public int RetryCount { get; set; }
+
+        /// <summary>
+        /// Token de cancelamento para operações assíncronas
+        /// </summary>
+        public CancellationToken CancellationToken { get; set; }
+
+        /// <summary>
+        /// Indica se o item deve ser processado pelo fallback
+        /// </summary>
+        public bool UseFallback { get; set; }
+
+        /// <summary>
+        /// Task de conclusão do processamento
+        /// </summary>
+        public TaskCompletionSource<PaymentResponse> Completion { get; set; } = new();
+    }
 }

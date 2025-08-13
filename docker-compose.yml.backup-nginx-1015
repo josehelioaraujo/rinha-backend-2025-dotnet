@@ -19,10 +19,10 @@ services:
       resources:
         limits:
           cpus: "0.1"
-          memory: "15MB"
+          memory: "8MB"
     restart: unless-stopped
 
-  # API Instance 1
+  # API Instance 1 - BUILD LOCAL
   api1: &api
     build: .
     hostname: api1
@@ -46,16 +46,16 @@ services:
       resources:
         limits:
           cpus: "0.7"
-          memory: "167MB"
+          memory: "171MB"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
-  # API Instance 2
+  # API Instance 2 - BUILD LOCAL
   api2:
     <<: *api
     hostname: api2

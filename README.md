@@ -1,121 +1,175 @@
-# Rinha Backend 2025 - .NET Ultra Performance
+# 💸 Rinha de Backend 2025 - Processador de Pagamentos
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![.NET 8.0](https://img.shields.io/badge/.NET-8.0-512BD4)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?logo=nginx&logoColor=white)
+![k6](https://img.shields.io/badge/k6-7D64FF?logo=k6&logoColor=white)
+
+Implementação para a [Rinha de Backend 2025 - Processador de Pagamentos](https://github.com/zanfranceschi/rinha-de-backend-2025) utilizando .NET 8, SQLite e conceitos modernos de alta performance.
+
+## 📋 Sobre o Projeto
+
+Esta implementação processa pagamentos de forma rápida e eficiente, gerenciando solicitações paralelas e garantindo consistência dos dados. A solução implementa:
+
+- Processamento assíncrono de pagamentos
+- Sistema de fallback local quando os processadores externos estão indisponíveis
+- Circuit breaker para lidar com falhas em serviços externos
+- Monitoramento de saúde dos componentes (health check)
+- Zero falhas sob carga
+- Testes de carga usando k6
 
 ## 🚀 Stack Tecnológica
 
-### Core
-- **Linguagem**: C# (.NET 8.0)
-- **Framework**: ASP.NET Core com Minimal APIs
-- **Runtime**: Kestrel Server (ultra-otimizado)
+### Backend
+- **.NET 8**: Framework moderno de alto desempenho
+- **C# 12**: Linguagem com recursos avançados para programação assíncrona
+- **Minimal APIs**: Endpoints leves e eficientes
 
-### Persistência
-- **Database**: SQLite com WAL mode
-- **Cache**: In-Memory caching híbrido
-- **Data Access**: ADO.NET direto (zero overhead)
+### Armazenamento
+- **SQLite**: Banco de dados embarcado para persistência
+- **WAL Mode**: Write-Ahead Logging para melhor concorrência
 
-### Arquitetura
-- **Load Balancer**: Nginx (2 instâncias API)
-- **Messaging**: Bounded Channels (pipeline assíncrono)
-- **Resiliência**: Circuit Breakers nativos
-- **Concorrência**: Background workers paralelos
+### Infraestrutura
+- **Docker**: Containerização dos serviços
+- **Docker Compose**: Orquestração de contêineres
+- **Nginx**: Load balancer para distribuição de carga
+- **Alpine Linux**: Imagens base leves
 
-### Containerização
-- **Container**: Docker multi-stage build
-- **Orquestração**: Docker Compose
-- **Registry**: GitHub Container Registry
+### Testes e Monitoramento
+- **k6**: Ferramenta de teste de carga para verificação de performance
+- **Circuit Breaker**: Monitoramento e proteção contra falhas em cascata
 
-## 🎯 Arquitetura de Alta Performance
+### Padrões e Técnicas
+- **Circuit Breaker**: Proteção contra falhas em cascata
+- **Backoff Exponencial**: Tentativas inteligentes em caso de falha
+- **Filas em Memória**: Processamento não-bloqueante
+- **Task-based Asynchronous Pattern**: Modelo assíncrono eficiente
 
-### Pipeline Assíncrono
+## 🏗️ Arquitetura
+
 ```
-POST /payments → Queue (Bounded Channel) → Background Workers → Database
-                    ↓ (Response imediata sub-ms)
-                  HTTP 200 OK
+             ┌──────────┐
+             │    k6    │
+             │(Test Tool)│
+             └─────┬────┘
+                   │
+                   ▼
+             ┌──────────┐
+             │  Nginx   │
+             │(Balance) │
+             └─────┬────┘
+                   │
+       ┌───────────┴───────────┐
+       │                       │
+  ┌────▼────┐             ┌────▼────┐
+  │         │             │         │
+  │  API 1  │             │  API 2  │
+  │         │             │         │
+  └────┬────┘             └────┬────┘
+       │                       │
+       └───────────┬───────────┘
+                   │
+          ┌────────┴─────────┐
+          │                  │
+    ┌─────▼─────┐      ┌─────▼─────┐
+    │  Default  │      │  Fallback │
+    │ Processor │      │ Processor │
+    └─────┬─────┘      └─────┬─────┘
+          │                  │
+          └───────────┬──────┘
+                      │
+                 ┌────▼────┐
+                 │ SQLite  │
+                 │ (WAL)   │
+                 └─────────┘
 ```
 
-### Estratégia de Negócio
-1. **Default Processor** (menor taxa) → Tentativa prioritária
-2. **Circuit Breaker** → Proteção contra falhas
-3. **Fallback Processor** → Backup automático
-4. **Cache híbrido** → GET /payments-summary otimizado
-
-### Otimizações Implementadas
-- **Kestrel**: 50k conexões simultâneas
-- **HTTP Clients**: Connection pooling agressivo
-- **Database**: WAL mode + índices otimizados
-- **Memory**: Object pooling + GC tuning
-- **JSON**: Serialização ultra-rápida
-
-## 📊 Performance Targets
-
-- **Throughput**: >10k RPS sustentado
-- **Latência**: p99 < 1.3ms (target competição)
-- **Recursos**: 1.5 CPU + 350MB RAM (conforme regras)
-- **Disponibilidade**: >99.9% com circuit breakers
-
-## 🐳 Como Executar
+## 💻 Como Executar
 
 ### Pré-requisitos
-```bash
-# 1. Subir Payment Processors (obrigatório primeiro)
-git clone https://github.com/zanfranceschi/rinha-de-backend-2025
-cd rinha-de-backend-2025/payment-processor
-docker compose up -d
-```
+- Docker
+- Docker Compose
 
-### Executar Backend
+### Passos
 ```bash
-# 2. Clonar este repositório
-git clone https://github.com/josehelioaraujo/rinha-backend-2025-dotnet
+# Clone o repositório
+git clone https://github.com/seu-usuario/rinha-backend-2025-dotnet.git
+
+# Entre no diretório
 cd rinha-backend-2025-dotnet
 
-# 3. Subir backend (aguarda rede payment-processor)
-docker compose up -d
+# Execute com Docker Compose
+docker-compose up -d
 
-# 4. Verificar funcionamento
-curl http://localhost:9999/
-curl http://localhost:9999/payments-summary
+# Teste a API
+curl -v http://localhost:9999/health
+curl -v -X POST http://localhost:9999/payments -H "Content-Type: application/json" -d '{"correlationId":"test-123","amount":100.00}'
 ```
 
-### Teste de Carga
+## 🧪 Testes de Carga
+
+Esta implementação foi testada com k6, a ferramenta oficial utilizada na Rinha de Backend:
+
+### Executando os Testes
 ```bash
-# Instalar k6
-sudo apt install k6
+# Instalar k6 (se necessário)
+# Para Ubuntu/Debian:
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+sudo apt-get update
+sudo apt-get install k6
 
-# Executar teste Rinha
-k6 run -e MAX_REQUESTS=550 rinha.js
+# Executar teste de carga
+cd load-tests
+k6 run script.js
 ```
 
-## 🏗️ Estrutura do Projeto
+### Configuração dos Testes
 
-```
-├── src/RinhaBackend2025/          # Código fonte .NET
-│   ├── Models/                    # DTOs e entidades
-│   ├── Services/                  # Lógica de negócio
-│   ├── Extensions/                # Configurações DI
-│   └── Program.cs                 # Entry point
-├── docker/
-│   └── nginx.conf                 # Load balancer config
-├── docker-compose.yml             # Orquestração
-└── README.md                      # Este arquivo
-```
+O script de teste de carga simula diferentes níveis de carga:
+- Fase de inicialização: Aumento gradual para 500 usuários
+- Fase de carga constante: Manutenção de 500 usuários simultâneos
+- Fase de redução: Redução gradual para 0 usuários
 
-## 🔗 Links
+Os testes avaliam:
+- Tempo de resposta (com limites de P95 < 500ms)
+- Taxa de erros (com limite de < 1%)
+- Requisições por segundo (média de 550 req/s esperada)
+- Verificação de correção das respostas
 
-- **Código Fonte**: https://github.com/josehelioaraujo/rinha-backend-2025-dotnet
-- **Container Image**: ghcr.io/josehelioaraujo/rinha-backend-2025-dotnet
-- **Rinha de Backend**: https://github.com/zanfranceschi/rinha-de-backend-2025
+Esta configuração de teste é compatível com a definição oficial da Rinha de Backend 2025, permitindo simular cenários de alta carga para avaliar a robustez e desempenho da solução.
 
-## 🏆 Diferenciais Técnicos
+## 🔍 Detalhes da Implementação
 
-1. **Pipeline Assíncrono**: Response imediata + processamento em background
-2. **Circuit Breakers Nativos**: Zero dependências externas
-3. **Bounded Channels**: Backpressure automático
-4. **Cache Híbrido**: Invalidação inteligente
-5. **SQLite WAL**: Performance + consistência ACID
-6. **Kestrel Tuning**: Configurações extremas de performance
+### Processamento de Pagamentos
+- Implementação de fallback local quando os processadores externos falham
+- Uso de circuit breaker para detectar falhas nos serviços
+- Sistema de filas em memória para processamento não-bloqueante
 
-Desenvolvido com foco na **máxima performance** e **resiliência** para a Rinha de Backend 2025! 🚀
+### Banco de Dados
+- SQLite configurado com WAL (Write-Ahead Logging)
+- Otimizações de cache e tamanho de página
+- Transações eficientes
 
-**Autor**: Hélio Andrade  
-**GitHub**: https://github.com/josehelioaraujo  
-**LinkedIn**: https://www.linkedin.com/in/helio-andrade-b8b5517
+### Escalabilidade
+- Múltiplas instâncias da API
+- Balanceamento de carga via Nginx
+- Conexões persistentes (keepalive)
+
+### Integração com Processadores
+- Comunicação via HTTP com processadores de pagamento
+- Suporte a múltiplos processadores (padrão e fallback)
+- Processamento local para garantir alta disponibilidade
+
+## 📝 Planos Futuros
+
+- Otimização adicional do tempo de resposta
+- Implementação de cache distribuído
+- Métricas e monitoramento em tempo real
+- Migração para banco de dados com melhor suporte a concorrência
+
+## 📜 Licença
+
+Este projeto está licenciado sob a [Licença MIT](LICENSE).
