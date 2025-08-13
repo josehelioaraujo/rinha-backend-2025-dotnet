@@ -13,6 +13,10 @@ obj/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+publish/
+*.exe
+*.pdb
+*.cache
 
 ## SQLite
 *.db
@@ -20,6 +24,22 @@ artifacts/
 *.db-wal
 *.sqlite
 *.sqlite3
+
+## Backup files
+*.bak
+*.backup
+*.old
+*.orig
+*.previous
+*.save
+*.swp
+*~
+*Program.cs.backup*
+*Program.cs.original
+*Program.cs.clean
+*.backup-*
+*.before-*
+backup/
 
 ## macOS
 .DS_Store
@@ -41,9 +61,3 @@ $RECYCLE.BIN/
 ## Docker
 .dockerignore
 docker-compose.override.yml
-
-## Logs and databases
-*.log
-*.sqlite
-logs/
-temp/
