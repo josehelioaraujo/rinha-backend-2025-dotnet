@@ -61,3 +61,10 @@ $RECYCLE.BIN/
 ## Docker
 .dockerignore
 docker-compose.override.yml
+
+# Ignorar arquivos de backup
+*.backup*
+*.backup-*
+*.bak
+*.clean
+*.original
