@@ -1,3 +1,5 @@
+[Código Fonte do Projeto](https://github.com/josehelioaraujo/rinha-backend-2025-dotnet.git)
+
 # 💸 Rinha de Backend 2025 - Processador de Pagamentos
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -95,7 +97,7 @@ Esta implementação processa pagamentos de forma rápida e eficiente, gerencian
 ### Passos
 ```bash
 # Clone o repositório
-git clone https://github.com/seu-usuario/rinha-backend-2025-dotnet.git
+git clone https://github.com/josehelioaraujo/rinha-backend-2025-dotnet.git
 
 # Entre no diretório
 cd rinha-backend-2025-dotnet
